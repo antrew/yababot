@@ -1,20 +1,31 @@
-/*
- * Getting Started example sketch for nRF24L01+ radios
- * This is a very basic example of how to send data from one node to another
- * Updated: Dec 2014 by TMRh20
- */
-
 #include <SPI.h>
 #include <printf.h>
+//#include <string.h>
 #include "RF24.h"
+#include "LiquidCrystal_I2C.h"
+#include "JoystickShield.h"
 #include "common.h"
-#include <LiquidCrystal_I2C.h>
 
 #define RADIO_PIN_CE 9
 #define RADIO_PIN_CS 10
 
 RF24 radio(RADIO_PIN_CE, RADIO_PIN_CS);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
+JoystickShield joystickShield;
+
+boolean isInSettingsMode = false;
+
+void onSettingsButton() {
+	lcd.setCursor(0, 0);
+	if (isInSettingsMode) {
+		Serial.println("exiting settings mode");
+		lcd.print("settings");
+	} else {
+		Serial.println("entering settings mode");
+		lcd.print("operation");
+	}
+	isInSettingsMode = !isInSettingsMode;
+}
 
 void setup() {
 	Serial.begin(115200);
@@ -36,12 +47,27 @@ void setup() {
 
 	radio.printDetails();
 
-
-    lcd.begin();
-    lcd.backlight();
-    lcd.clear();
+	lcd.begin();
+	lcd.backlight();
+	lcd.clear();
 	lcd.print("Hello world!");
+
+	joystickShield.setButtonPins(2, 3, 4, 5, 6, 8, 7);
+	joystickShield.setButtonPinsUnpressedState(HIGH, LOW, LOW, LOW, LOW, LOW,
+	LOW);
+
+	joystickShield.calibrateJoystick();
+
+	joystickShield.onEButton(&onSettingsButton);
+	joystickShield.onFButton(&onSettingsButton);
+	joystickShield.onDownButton(&onSettingsButton);
+	joystickShield.onUpButton(&onSettingsButton);
+	joystickShield.onLeftButton(&onSettingsButton);
+	joystickShield.onRightButton(&onSettingsButton);
+
 }
+
+char line[30];
 
 void loop() {
 
@@ -54,6 +80,18 @@ void loop() {
 		Serial.println(F("failed"));
 	}
 	Serial.println(F("done"));
+
+	//joystickShield.processEvents();
+	joystickShield.processCallbacks();
+
+	int x = joystickShield.xAmplitude();
+	int y = joystickShield.yAmplitude();
+
+	sprintf(line, "x=%4d ; y=%4d", x, y);
+//	lcd.setCursor(0, 0);
+//	lcd.print(line);
+//
+	Serial.println(line);
 
 	delay(1000);
 } // Loop
