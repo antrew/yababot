@@ -8,6 +8,7 @@
 #include <printf.h>
 #include "RF24.h"
 #include "common.h"
+#include "Motor.h"
 
 // 2 and 3 are the only two pins supporting hardware interrupts
 const uint8_t LEFT_ENCODER_INTERRUPT_PIN = 2;
@@ -28,11 +29,14 @@ const uint8_t RADIO_CS_PIN = 8;
 // RADIO MISO = 12
 // RADIO SCK  = 13
 
+const char * FW_ID = "yababot";
+
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
 /**********************************************************/
 
-const char * FW_ID = "yababot";
+Motor leftMotor = Motor(MOTOR_LEFT_BACKWARD, MOTOR_LEFT_FORWARD);
+Motor rightMotor = Motor(MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_FORWARD);
 
 void setupMotors() {
 //	pinMode(MOTOR_LEFT_BACKWARD, OUTPUT);
@@ -87,9 +91,9 @@ void loop() {
 		Serial.print("}");
 		Serial.println();
 
-		analogWrite(MOTOR_LEFT_FORWARD, message.forward);
-		analogWrite(MOTOR_RIGHT_FORWARD, message.forward);
-
+		float direction = message.forward / 100.0;
+		leftMotor.setDirection(direction);
+		rightMotor.setDirection(direction);
 	}
 
 } // Loop
