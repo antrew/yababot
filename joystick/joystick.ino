@@ -74,10 +74,15 @@ unsigned long counter = 0;
 
 void loop() {
 
-	struct radioMessage message;
+	//joystickShield.processEvents();
+	joystickShield.processCallbacks();
+	int x = joystickShield.xAmplitude();
+	int joystickY = joystickShield.yAmplitude();
 
+	struct radioMessage message;
 	message.timestamp = micros();
 	message.counter = counter++;
+	message.forward = joystickY;
 
 	Serial.print("Sending ");
 	Serial.print(message.timestamp);
@@ -87,17 +92,11 @@ void loop() {
 	}
 	Serial.println(F("done"));
 
-	//joystickShield.processEvents();
-	joystickShield.processCallbacks();
-
-	int x = joystickShield.xAmplitude();
-	int y = joystickShield.yAmplitude();
-
-	sprintf(line, "x=%4d ; y=%4d", x, y);
+	sprintf(line, "x=%4d ; y=%4d", x, joystickY);
 //	lcd.setCursor(0, 0);
 //	lcd.print(line);
 //
 	Serial.println(line);
 
-	delay(1000);
+//	delay(1000);
 } // Loop

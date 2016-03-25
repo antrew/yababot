@@ -28,6 +28,7 @@ uint8_t RADIO_ADDRESS[6] = "YABAB";
 struct radioMessage {
 	unsigned long timestamp;
 	unsigned long counter;
+	int8_t forward;
 };
 
 //Do not add code below this line
