@@ -15,6 +15,8 @@ JoystickShield joystickShield;
 
 boolean isInSettingsMode = false;
 
+const char * FW_ID = "joystick";
+
 void onSettingsButton() {
 	lcd.setCursor(0, 0);
 	if (isInSettingsMode) {
@@ -30,7 +32,7 @@ void onSettingsButton() {
 void setup() {
 	Serial.begin(115200);
 	printf_begin();
-	Serial.println("joystick.ino");
+	Serial.println(FW_ID);
 
 	radio.begin();
 
@@ -50,7 +52,7 @@ void setup() {
 	lcd.begin();
 	lcd.backlight();
 	lcd.clear();
-	lcd.print("Hello world!");
+	lcd.print(FW_ID);
 
 	joystickShield.setButtonPins(2, 3, 4, 5, 6, 8, 7);
 	joystickShield.setButtonPinsUnpressedState(HIGH, LOW, LOW, LOW, LOW, LOW,
@@ -68,15 +70,19 @@ void setup() {
 }
 
 char line[30];
+unsigned long counter = 0;
 
 void loop() {
 
-	unsigned long start_time = micros();
+	struct radioMessage message;
+
+	message.timestamp = micros();
+	message.counter = counter++;
 
 	Serial.print("Sending ");
-	Serial.print(start_time);
+	Serial.print(message.timestamp);
 	Serial.print("... ");
-	if (!radio.write(&start_time, sizeof(unsigned long))) {
+	if (!radio.write(&message, sizeof(message))) {
 		Serial.println(F("failed"));
 	}
 	Serial.println(F("done"));

@@ -25,5 +25,10 @@ uint8_t RADIO_ADDRESS[6] = "YABAB";
 // 108 - 2.508 Ghz - Above most Wifi Channels
 #define RADIO_CHANNEL 108
 
+struct radioMessage {
+	unsigned long timestamp;
+	unsigned long counter;
+};
+
 //Do not add code below this line
 #endif /* _common_H_ */

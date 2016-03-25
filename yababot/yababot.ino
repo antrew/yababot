@@ -13,10 +13,16 @@
 RF24 radio(9, 10);
 /**********************************************************/
 
+// 2 and 3 are the only two pins supporting hardware interrupts
+const uint8_t LEFT_ENCODER_INTERRUPT_PIN = 2;
+const uint8_t RIGHT_ENCODER_INTERRUPT_PIN = 3;
+
+const char * FW_ID = "yababot";
+
 void setup() {
 	Serial.begin(115200);
 	printf_begin();
-	Serial.println("yababot.ino");
+	Serial.println(FW_ID);
 
 	radio.begin();
 
@@ -39,16 +45,20 @@ void setup() {
 
 void loop() {
 
-	unsigned long got_time;
+	struct radioMessage message;
 
 	if (radio.available()) {
 		// Variable for the received timestamp
 		while (radio.available()) {             // While there is data ready
-			radio.read(&got_time, sizeof(unsigned long)); // Get the payload
+			radio.read(&message, sizeof(message)); // Get the payload
 		}
 
-		Serial.print("received: ");
-		Serial.println(got_time);
+		Serial.print("received: {");
+		Serial.print(message.timestamp);
+		Serial.print(", ");
+		Serial.print(message.counter);
+		Serial.print("}");
+		Serial.println();
 	}
 
 } // Loop
