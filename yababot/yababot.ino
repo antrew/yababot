@@ -7,7 +7,7 @@
 #include <SPI.h>
 #include <printf.h>
 #include "RF24.h"
-#include "common.h"
+#include "../common/common.h"
 #include "Motor.h"
 
 // 2 and 3 are the only two pins supporting hardware interrupts
