@@ -8,6 +8,7 @@ pre_processing_boards.txt
 pre_processing_platform.txt
 /RemoteSystemsTempFiles/
 /yababot/Release/
+build-uno
 
 # KDevelop
 *.kdev4
