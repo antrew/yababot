@@ -4,7 +4,7 @@
 #include "RF24.h"
 #include "LiquidCrystal_I2C.h"
 #include "JoystickShield.h"
-#include "common.h"
+#include "../common/common.h"
 
 #define RADIO_PIN_CE 9
 #define RADIO_PIN_CS 10
