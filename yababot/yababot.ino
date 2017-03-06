@@ -13,9 +13,10 @@
 #include <MPU6050.h>
 
 #include <math.h>
+#include "ComplementaryFilter.h"
 
 MPU6050 mpu;
-
+ComplementaryFilter complementaryFilter;
 
 // 2 and 3 are the only two pins supporting hardware interrupts
 const uint8_t LEFT_ENCODER_INTERRUPT_PIN = 2;
@@ -59,7 +60,7 @@ void setupSensors() {
     Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
     delay(500);
   }
-  //mpu.calibrateGyro();
+  mpu.calibrateGyro();
 }
 
 void setup() {
@@ -93,12 +94,12 @@ void processSensors() {
   Vector rawAccel = mpu.readRawAccel();
   Vector normAccel = mpu.readNormalizeAccel();
 
-  Serial.print(" Xraw = ");
-  Serial.print(rawAccel.XAxis);
-  Serial.print(" Yraw = ");
-  Serial.print(rawAccel.YAxis);
-  Serial.print(" Zraw = ");
-  Serial.print(rawAccel.ZAxis);
+//  Serial.print(" Xraw = ");
+//  Serial.print(rawAccel.XAxis);
+//  Serial.print(" Yraw = ");
+//  Serial.print(rawAccel.YAxis);
+//  Serial.print(" Zraw = ");
+//  Serial.print(rawAccel.ZAxis);
 
 //  Serial.print(" Xnorm = ");
 //  Serial.print(normAccel.XAxis);
@@ -107,29 +108,31 @@ void processSensors() {
 //  Serial.print(" Znorm = ");
 //  Serial.println(normAccel.ZAxis);
 
-  
-  double accelAngle = atan2( -rawAccel.YAxis, -rawAccel.ZAxis);
+  // Y points forward
+  // X points left
+  // Z points down
+  // convert atan2 from radians to grads
+  double accelAngle = 180 / M_PI * atan2( -rawAccel.YAxis, -rawAccel.ZAxis);
 
+  // gyroscope is already in grads
   Vector normGyro = mpu.readNormalizeGyro();
-  double gyroAngle = normGyro.XAxis;
+  double gyroRate = normGyro.XAxis;
   
-  Serial.print(" accelAngle = ");
-  Serial.print(accelAngle);
-  Serial.print(" gyroAngle = ");
-  Serial.print(gyroAngle);
+//  Serial.print(" accelAngle = ");
+//  Serial.print(accelAngle);
+//  Serial.print(" gyroRate = ");
+//  Serial.print(gyroRate);
+//  Serial.println();
   
-
+  complementaryFilter.updateValue(accelAngle, gyroRate);
   
-  Serial.println();
-  
-  // TODO complementary filter
 }
 
 void loop() {
 
 	struct radioMessage message;
 
-	// TODO read MPU6050 here
+	// read MPU6050 here
 	processSensors();
 
 	if (radio.available()) {
