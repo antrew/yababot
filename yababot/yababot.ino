@@ -14,6 +14,7 @@
 
 #include <math.h>
 #include "ComplementaryFilter.h"
+#include "PID.h"
 
 MPU6050 mpu;
 ComplementaryFilter complementaryFilter;
@@ -46,6 +47,10 @@ RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
 
 Motor leftMotor = Motor(MOTOR_LEFT_ENABLE, MOTOR_LEFT_BACKWARD, MOTOR_LEFT_FORWARD);
 Motor rightMotor = Motor(MOTOR_RIGHT_ENABLE, MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_FORWARD);
+
+PID pid = PID(1, 0, 0);
+
+double setPoint = 0;
 
 void setupSensors() {
   while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G))
@@ -84,7 +89,6 @@ void setup() {
 
 void processSensors() {
   Vector rawAccel = mpu.readRawAccel();
-  Vector normAccel = mpu.readNormalizeAccel();
 
 //  Serial.print(" Xraw = ");
 //  Serial.print(rawAccel.XAxis);
@@ -92,13 +96,6 @@ void processSensors() {
 //  Serial.print(rawAccel.YAxis);
 //  Serial.print(" Zraw = ");
 //  Serial.print(rawAccel.ZAxis);
-
-//  Serial.print(" Xnorm = ");
-//  Serial.print(normAccel.XAxis);
-//  Serial.print(" Ynorm = ");
-//  Serial.print(normAccel.YAxis);
-//  Serial.print(" Znorm = ");
-//  Serial.println(normAccel.ZAxis);
 
   // Y points forward
   // X points left
@@ -117,7 +114,13 @@ void processSensors() {
 //  Serial.println();
   
   complementaryFilter.updateValue(accelAngle, gyroRate);
-  
+}
+
+void control() {
+  double error = setPoint - complementaryFilter.getAngle();
+  double u = pid.perform(error, complementaryFilter.getDt());
+  leftMotor.setDirection(u);
+  rightMotor.setDirection(u);
 }
 
 void loop() {
@@ -126,6 +129,8 @@ void loop() {
 
 	// read MPU6050 here
 	processSensors();
+
+	control();
 
 	if (radio.available()) {
 		// Variable for the received timestamp

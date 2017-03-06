@@ -14,10 +14,11 @@ public:
 	virtual ~ComplementaryFilter();
 	void updateValue(double accelerometerAngle, double gyroRate);
 	double getAngle();
+	double getDt();
 private:
 	unsigned long lastTime;
 	double angle;
-	unsigned long dt;
+	double dt;
 	void calculateDt();
 };
 

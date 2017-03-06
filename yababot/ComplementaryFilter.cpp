@@ -18,7 +18,7 @@ ComplementaryFilter::~ComplementaryFilter() {
 void ComplementaryFilter::calculateDt() {
 	// calculate dt based on the current time and the previous measurement time
 	unsigned long currentTime = micros();
-	dt = currentTime - lastTime;
+	dt = (currentTime - lastTime) / 1000000.0;
 	lastTime = currentTime;
 }
 
@@ -34,9 +34,9 @@ void ComplementaryFilter::updateValue(
 	// bigger T increases the use of the gyroscope over the accelerometer
 	// smaller T increases the use of the accelerometer over the gyroscope
 	// use Arduino Serial Plotter over accelerometerAngle and angle to tune T
-	double T = 1000000; // in microseconds
+	double T = 1; // in seconds
 	double K = T / (T + dt);
-	double gyroscopeAngle = gyroRate * dt / 1000000;
+	double gyroscopeAngle = gyroRate * dt;
 	angle = K * (angle + gyroscopeAngle) + (1 - K) * accelerometerAngle;
 
 	Serial.print(" accelerometerAngle ");
@@ -55,4 +55,8 @@ void ComplementaryFilter::updateValue(
 
 double ComplementaryFilter::getAngle() {
 	return this->angle;
+}
+
+double ComplementaryFilter::getDt() {
+	return this->dt;
 }
