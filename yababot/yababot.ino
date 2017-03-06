@@ -10,6 +10,13 @@
 #include "../common/common.h"
 #include "Motor.h"
 
+#include <MPU6050.h>
+
+#include <math.h>
+
+MPU6050 mpu;
+
+
 // 2 and 3 are the only two pins supporting hardware interrupts
 const uint8_t LEFT_ENCODER_INTERRUPT_PIN = 2;
 const uint8_t RIGHT_ENCODER_INTERRUPT_PIN = 3;
@@ -46,6 +53,15 @@ void setupMotors() {
 
 }
 
+void setupSensors() {
+  while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G))
+  {
+    Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
+    delay(500);
+  }
+  //mpu.calibrateGyro();
+}
+
 void setup() {
 	Serial.begin(115200);
 	printf_begin();
@@ -70,11 +86,51 @@ void setup() {
 	radio.printDetails();
 
 	setupMotors();
+	setupSensors();
+}
+
+void processSensors() {
+  Vector rawAccel = mpu.readRawAccel();
+  Vector normAccel = mpu.readNormalizeAccel();
+
+  Serial.print(" Xraw = ");
+  Serial.print(rawAccel.XAxis);
+  Serial.print(" Yraw = ");
+  Serial.print(rawAccel.YAxis);
+  Serial.print(" Zraw = ");
+  Serial.print(rawAccel.ZAxis);
+
+//  Serial.print(" Xnorm = ");
+//  Serial.print(normAccel.XAxis);
+//  Serial.print(" Ynorm = ");
+//  Serial.print(normAccel.YAxis);
+//  Serial.print(" Znorm = ");
+//  Serial.println(normAccel.ZAxis);
+
+  
+  double accelAngle = atan2( -rawAccel.YAxis, -rawAccel.ZAxis);
+
+  Vector normGyro = mpu.readNormalizeGyro();
+  double gyroAngle = normGyro.XAxis;
+  
+  Serial.print(" accelAngle = ");
+  Serial.print(accelAngle);
+  Serial.print(" gyroAngle = ");
+  Serial.print(gyroAngle);
+  
+
+  
+  Serial.println();
+  
+  // TODO complementary filter
 }
 
 void loop() {
 
 	struct radioMessage message;
+
+	// TODO read MPU6050 here
+	processSensors();
 
 	if (radio.available()) {
 		// Variable for the received timestamp
