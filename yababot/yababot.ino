@@ -21,15 +21,16 @@ ComplementaryFilter complementaryFilter;
 // 2 and 3 are the only two pins supporting hardware interrupts
 const uint8_t LEFT_ENCODER_INTERRUPT_PIN = 2;
 const uint8_t RIGHT_ENCODER_INTERRUPT_PIN = 3;
+const uint8_t LEFT_ENCODER_SECOND_PIN = A3;
+const uint8_t RIGHT_ENCODER_SECOND_PIN = A2;
 
-const uint8_t LEFT_ENCODER_SECOND_PIN = 4;
-const uint8_t RIGHT_ENCODER_SECOND_PIN = A0;
+const uint8_t MOTOR_LEFT_ENABLE = 6;
+const uint8_t MOTOR_LEFT_FORWARD = 9;
+const uint8_t MOTOR_LEFT_BACKWARD = 10;
 
-const uint8_t MOTOR_LEFT_FORWARD = 5;
-const uint8_t MOTOR_LEFT_BACKWARD = 6;
-
-const uint8_t MOTOR_RIGHT_FORWARD = 9;
-const uint8_t MOTOR_RIGHT_BACKWARD = 10;
+const uint8_t MOTOR_RIGHT_ENABLE = 5;
+const uint8_t MOTOR_RIGHT_FORWARD = 4;
+const uint8_t MOTOR_RIGHT_BACKWARD = A0;
 
 const uint8_t RADIO_CE_PIN = 7;
 const uint8_t RADIO_CS_PIN = 8;
