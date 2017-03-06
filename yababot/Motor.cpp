@@ -1,8 +1,12 @@
 #include "Motor.h"
 
-Motor::Motor(int backwardPin, int forwardPin) {
-	this->backwardPwmPin = backwardPin;
-	this->forwardPwmPin = forwardPin;
+Motor::Motor(int enablePin, int backwardPin, int forwardPin) {
+	this->enablePin = enablePin;
+	this->backwardPin = backwardPin;
+	this->forwardPin = forwardPin;
+	pinMode(enablePin, OUTPUT);
+	pinMode(backwardPin, OUTPUT);
+	pinMode(forwardPin, OUTPUT);
 }
 
 void Motor::setDirection(float direction) {
@@ -15,12 +19,13 @@ void Motor::setDirection(float direction) {
 	uint8_t power = abs(direction * 255);
 
 	if (direction < 0) {
-		analogWrite(backwardPwmPin, power);
-		analogWrite(forwardPwmPin, LOW);
+		digitalWrite(backwardPin, HIGH);
+		digitalWrite(forwardPin, LOW);
 	} else {
-		analogWrite(backwardPwmPin, LOW);
-		analogWrite(forwardPwmPin, power);
+		digitalWrite(backwardPin, LOW);
+		digitalWrite(forwardPin, HIGH);
 	}
+	analogWrite(enablePin, power);
 }
 
 Motor::~Motor() {

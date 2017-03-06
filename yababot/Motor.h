@@ -5,12 +5,13 @@
 
 class Motor {
 public:
-	Motor(int backwardPin, int forwardPin);
+	Motor(int enablePin, int backwardPin, int forwardPin);
 	void setDirection(float target);
 	virtual ~Motor();
 private:
-	int backwardPwmPin;
-	int forwardPwmPin;
+	int enablePin;
+	int backwardPin;
+	int forwardPin;
 };
 
 #endif /* MOTOR_H_ */

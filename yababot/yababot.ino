@@ -44,16 +44,8 @@ const char * FW_ID = "yababot";
 RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
 /**********************************************************/
 
-Motor leftMotor = Motor(MOTOR_LEFT_BACKWARD, MOTOR_LEFT_FORWARD);
-Motor rightMotor = Motor(MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_FORWARD);
-
-void setupMotors() {
-//	pinMode(MOTOR_LEFT_BACKWARD, OUTPUT);
-//	pinMode(MOTOR_LEFT_FORWARD, OUTPUT);
-//	pinMode(MOTOR_RIGHT_BACKWARD, OUTPUT);
-//	pinMode(MOTOR_RIGHT_FORWARD, OUTPUT);
-
-}
+Motor leftMotor = Motor(MOTOR_LEFT_ENABLE, MOTOR_LEFT_BACKWARD, MOTOR_LEFT_FORWARD);
+Motor rightMotor = Motor(MOTOR_RIGHT_ENABLE, MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_FORWARD);
 
 void setupSensors() {
   while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G))
@@ -87,7 +79,6 @@ void setup() {
 
 	radio.printDetails();
 
-	setupMotors();
 	setupSensors();
 }
 
