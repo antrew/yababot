@@ -41,7 +41,7 @@ void setup() {
 	radio.setPALevel(RADIO_POWER_LEVEL);
 
 	// increase range by reducing the speed
-	radio.setDataRate(RF24_250KBPS);
+	radio.setDataRate(RADIO_DATA_RATE);
 	// 108 - 2.508 Ghz - Above most Wifi Channels
 	radio.setChannel(108);
 
