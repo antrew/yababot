@@ -9,7 +9,20 @@ Motor::Motor(int enablePin, int backwardPin, int forwardPin) {
 	pinMode(forwardPin, OUTPUT);
 }
 
+void Motor::on() {
+	motorEnabled = true;
+}
+void Motor::off() {
+	motorEnabled = false;
+	analogWrite(enablePin, LOW);
+	digitalWrite(backwardPin, LOW);
+	digitalWrite(forwardPin, LOW);
+}
+
 void Motor::setDirection(float direction) {
+	if ( ! motorEnabled ) {
+		return;
+	}
 	//limit the target value to the range -1 .. 1
 	if (direction > 1)
 		direction = 1;

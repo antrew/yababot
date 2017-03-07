@@ -29,6 +29,7 @@ struct radioMessage {
 	unsigned long timestamp;
 	unsigned long counter;
 	int8_t forward;
+	bool toggleMotors;
 };
 
 //Do not add code below this line

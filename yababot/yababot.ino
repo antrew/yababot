@@ -48,6 +48,8 @@ RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
 Motor leftMotor = Motor(MOTOR_LEFT_ENABLE, MOTOR_LEFT_BACKWARD, MOTOR_LEFT_FORWARD);
 Motor rightMotor = Motor(MOTOR_RIGHT_ENABLE, MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_FORWARD);
 
+bool motorsEnabled = false;
+
 PID pid = PID(1, 0, 0);
 
 double setPoint = 0;
@@ -85,6 +87,10 @@ void setup() {
 	radio.printDetails();
 
 	setupSensors();
+
+	motorsEnabled = false;
+	leftMotor.off();
+	rightMotor.off();
 }
 
 void processSensors() {
@@ -123,17 +129,9 @@ void control() {
   rightMotor.setDirection(u);
 }
 
-void loop() {
-
-	struct radioMessage message;
-
-	// read MPU6050 here
-	processSensors();
-
-	control();
-
+void processRadio() {
 	if (radio.available()) {
-		// Variable for the received timestamp
+		struct radioMessage message;
 		while (radio.available()) {             // While there is data ready
 			radio.read(&message, sizeof(message)); // Get the payload
 		}
@@ -144,10 +142,31 @@ void loop() {
 		Serial.print(message.counter);
 		Serial.print(", ");
 		Serial.print(message.forward);
+		Serial.print(", ");
+		Serial.print(message.toggleMotors);
 		Serial.print("}");
 		Serial.println();
 
+		if (message.toggleMotors) {
+			if (motorsEnabled) {
+				motorsEnabled = false;
+				leftMotor.off();
+				rightMotor.off();
+			} else {
+				motorsEnabled = true;
+				leftMotor.on();
+				rightMotor.on();
+			}
+			
+		}
 		float direction = message.forward / 100.0;
 	}
-
+}
+void loop() {
+	// read MPU6050 here
+	processSensors();
+	// balance
+	control();
+	// process radio commands
+	processRadio();
 } // Loop

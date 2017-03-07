@@ -83,6 +83,16 @@ void loop() {
 	message.timestamp = micros();
 	message.counter = counter++;
 	message.forward = joystickY;
+	if (joystickShield.isEButton()) {
+		Serial.println("E button pressed. Toggling motors. Waiting for the button to be released...");
+		message.toggleMotors = true;
+		while (joystickShield.isEButton()) {
+			// wait until the user releases the button
+			joystickShield.processEvents();
+		}
+	} else {
+		message.toggleMotors = false;
+	}
 
 	Serial.print("Sending ");
 	Serial.print(message.timestamp);
