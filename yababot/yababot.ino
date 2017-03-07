@@ -129,39 +129,32 @@ void control() {
   rightMotor.setDirection(u);
 }
 
+void toggleMotors() {
+	if (motorsEnabled) {
+		motorsEnabled = false;
+		leftMotor.off();
+		rightMotor.off();
+	} else {
+		motorsEnabled = true;
+		leftMotor.on();
+		rightMotor.on();
+	}
+}
+
 void processRadio() {
 	if (radio.available()) {
 		struct radioMessage message;
 		while (radio.available()) {             // While there is data ready
 			radio.read(&message, sizeof(message)); // Get the payload
-		}
 
-		Serial.print("received: {");
-		Serial.print(message.timestamp);
-		Serial.print(", ");
-		Serial.print(message.counter);
-		Serial.print(", ");
-		Serial.print(message.forward);
-		Serial.print(", ");
-		Serial.print(message.toggleMotors);
-		Serial.print("}");
-		Serial.println();
-
-		if (message.toggleMotors) {
-			if (motorsEnabled) {
-				motorsEnabled = false;
-				leftMotor.off();
-				rightMotor.off();
-			} else {
-				motorsEnabled = true;
-				leftMotor.on();
-				rightMotor.on();
+			if (message.toggleMotors) {
+				toggleMotors();
 			}
-			
+			float direction = message.forward / 100.0;
 		}
-		float direction = message.forward / 100.0;
 	}
 }
+
 void loop() {
 	// read MPU6050 here
 	processSensors();
