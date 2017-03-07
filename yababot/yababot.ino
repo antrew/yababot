@@ -148,8 +148,6 @@ void loop() {
 		Serial.println();
 
 		float direction = message.forward / 100.0;
-		leftMotor.setDirection(direction);
-		rightMotor.setDirection(direction);
 	}
 
 } // Loop
