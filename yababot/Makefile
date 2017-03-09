@@ -5,7 +5,7 @@
 
 USER_LIB_PATH=../lib
 
-ARDUINO_LIBS=Wire SPI Arduino-MPU6050 RF24
+ARDUINO_LIBS=Wire SPI Arduino-MPU6050 RF24 Encoder
 
 #BOARD_TAG    = uno
 BOARD_TAG = pro328

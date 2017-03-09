@@ -9,12 +9,14 @@
 #include "RF24.h"
 #include "../common/common.h"
 #include "Motor.h"
+#include "Encoder.h"
 
 #include <MPU6050.h>
 
 #include <math.h>
 #include "ComplementaryFilter.h"
 #include "PID.h"
+#include "WheelEncoder.h"
 
 MPU6050 mpu;
 ComplementaryFilter complementaryFilter;
@@ -51,12 +53,22 @@ const uint8_t CALIBRATION_TIME_SECONDS = 3;
  */
 const double FAILSAFE_CRITICAL_ANGLE = 70;
 
+// TODO verify these constants
+const double WHEEL_DIAMETER_MM = 86;
+const double GEAR_RATIO = 36;
+const uint8_t TICKS_PER_REVOLUTION = 44;
+
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
 /**********************************************************/
 
 Motor leftMotor = Motor(MOTOR_LEFT_ENABLE, MOTOR_LEFT_BACKWARD, MOTOR_LEFT_FORWARD);
 Motor rightMotor = Motor(MOTOR_RIGHT_ENABLE, MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_FORWARD);
+
+Encoder leftEncoder = Encoder(LEFT_ENCODER_INTERRUPT_PIN, LEFT_ENCODER_SECOND_PIN);
+Encoder rightEncoder = Encoder(RIGHT_ENCODER_INTERRUPT_PIN, RIGHT_ENCODER_SECOND_PIN);
+
+WheelEncoder wheelEncoder = WheelEncoder(TICKS_PER_REVOLUTION, GEAR_RATIO, WHEEL_DIAMETER_MM);
 
 bool motorsEnabled = false;
 
@@ -137,6 +149,24 @@ void processSensors() {
 //  Serial.println();
   
   complementaryFilter.updateValue(accelAngle, gyroRate);
+}
+
+int32_t leftEncoderLast = 0;
+void processEncoders() {
+  int32_t l = - leftEncoder.read();
+  int32_t delta = l - leftEncoderLast;
+  double distance = wheelEncoder.getDistance(l);
+  double speed = wheelEncoder.getSpeed(delta, complementaryFilter.getDt());
+  leftEncoderLast = l;
+  Serial.print("Encoder ticks ");
+  Serial.print(l);
+  Serial.print(" delta ");
+  Serial.print(delta);
+  Serial.print(" distance ");
+  Serial.print(distance);
+  Serial.print(" speed ");
+  Serial.print(speed);
+  Serial.println();
 }
 
 void control() {
@@ -230,6 +260,7 @@ void processRadio() {
 void loop() {
 	// read MPU6050 here
 	processSensors();
+	processEncoders();
 	// balance
 	control();
 	// process radio commands
