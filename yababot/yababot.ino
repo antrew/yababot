@@ -49,6 +49,12 @@ const double PID_D = 0;
 
 const uint8_t CALIBRATION_TIME_SECONDS = 3;
 
+/**
+ * Critical angle that cannot be normally recovered.
+ * Motors will be switched off when this angle is reached.
+ */
+const double FAILSAFE_CRITICAL_ANGLE = 70;
+
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
 /**********************************************************/
@@ -131,7 +137,13 @@ void processSensors() {
 }
 
 void control() {
-  // TODO turn off motors if the angle is more than critical
+  // turn off motors if the angle is more than critical
+  if (abs(complementaryFilter.getAngle()) > FAILSAFE_CRITICAL_ANGLE) {
+    Serial.println("Critical angle detected. Switching motors off.");
+    leftMotor.off();
+    rightMotor.off();
+  }
+
   double error = setPoint - complementaryFilter.getAngle();
   double u = pid.perform(error, complementaryFilter.getDt());
   leftMotor.setDirection(u);
@@ -139,11 +151,14 @@ void control() {
 }
 
 void toggleMotors() {
+	Serial.print("Toggling motors ");
 	if (motorsEnabled) {
+		Serial.println("off");
 		motorsEnabled = false;
 		leftMotor.off();
 		rightMotor.off();
 	} else {
+		Serial.println("on");
 		motorsEnabled = true;
 		leftMotor.on();
 		rightMotor.on();
