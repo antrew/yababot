@@ -22,19 +22,21 @@ ComplementaryFilter complementaryFilter;
 // 2 and 3 are the only two pins supporting hardware interrupts
 const uint8_t LEFT_ENCODER_INTERRUPT_PIN = 2;
 const uint8_t RIGHT_ENCODER_INTERRUPT_PIN = 3;
-const uint8_t LEFT_ENCODER_SECOND_PIN = A3;
-const uint8_t RIGHT_ENCODER_SECOND_PIN = A2;
+const uint8_t LEFT_ENCODER_SECOND_PIN = 4;
+const uint8_t RIGHT_ENCODER_SECOND_PIN = 5;
 
-const uint8_t MOTOR_LEFT_ENABLE = 6;
-const uint8_t MOTOR_LEFT_FORWARD = 9;
-const uint8_t MOTOR_LEFT_BACKWARD = 10;
+// motor enable pins must be PWM
+const uint8_t MOTOR_LEFT_ENABLE = 9;
+const uint8_t MOTOR_LEFT_FORWARD = 8;
+const uint8_t MOTOR_LEFT_BACKWARD = 7;
 
-const uint8_t MOTOR_RIGHT_ENABLE = 5;
-const uint8_t MOTOR_RIGHT_FORWARD = 4;
-const uint8_t MOTOR_RIGHT_BACKWARD = A0;
+// motor enable pins must be PWM
+const uint8_t MOTOR_RIGHT_ENABLE = 10;
+const uint8_t MOTOR_RIGHT_FORWARD = A3;
+const uint8_t MOTOR_RIGHT_BACKWARD = A2;
 
-const uint8_t RADIO_CE_PIN = 7;
-const uint8_t RADIO_CS_PIN = 8;
+const uint8_t RADIO_CE_PIN = A0;
+const uint8_t RADIO_CS_PIN = A1;
 // RADIO MOSI = 11
 // RADIO MISO = 12
 // RADIO SCK  = 13
@@ -123,6 +125,7 @@ void processSensors() {
 }
 
 void control() {
+  // TODO turn off motors if the angle is more than critical
   double error = setPoint - complementaryFilter.getAngle();
   double u = pid.perform(error, complementaryFilter.getDt());
   leftMotor.setDirection(u);
