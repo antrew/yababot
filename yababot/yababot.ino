@@ -47,6 +47,8 @@ const double PID_P = 0;
 const double PID_I = 0;
 const double PID_D = 0;
 
+const uint8_t CALIBRATION_TIME_SECONDS = 3;
+
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
 /**********************************************************/
@@ -148,6 +150,29 @@ void toggleMotors() {
 	}
 }
 
+void calibrate() {
+	Serial.println("Begin calibration");
+
+	// calibrate gyro
+	mpu.calibrateGyro();
+
+	// calibrate setPoint
+	unsigned long endCalibrationMillis = millis() + CALIBRATION_TIME_SECONDS * 1000;
+	unsigned long iterations = 0;
+	double sumAngle = 0;
+	while (millis() < endCalibrationMillis) {
+		processSensors();
+		sumAngle += complementaryFilter.getAngle();
+		iterations++;
+	}
+	setPoint = sumAngle / iterations;
+	Serial.print("End calibration. setPoint = ");
+	Serial.print(setPoint);
+	Serial.print(" iterations = ");
+	Serial.print(iterations);
+	Serial.println();
+}
+
 void processRadio() {
 	if (radio.available()) {
 		struct radioMessage message;
@@ -159,7 +184,7 @@ void processRadio() {
 					toggleMotors();
 					break;
 				case CALIBRATE:
-					// TODO implement calibration
+					calibrate();
 					break;
 				case SET_PID_COEFFICIENTS:
 					pid.setCoefficients(message.pidP, message.pidI, message.pidD);

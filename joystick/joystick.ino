@@ -114,6 +114,13 @@ void loop() {
 			// wait until the user releases the button
 			joystickShield.processEvents();
 		}
+	} else if (joystickShield.isFButton()) {
+		Serial.println("F button pressed. Calibrating. Waiting for the button to be released...");
+		message.command = CALIBRATE;
+		while (joystickShield.isFButton()) {
+			// wait until the user releases the button
+			joystickShield.processEvents();
+		}
 	}
 
 	Serial.print("Sending ");
