@@ -47,6 +47,8 @@ const double PID_P = 0;
 const double PID_I = 0;
 const double PID_D = 0;
 
+const double ROTATION_PID_P = 0.01;
+
 const uint8_t CALIBRATION_TIME_SECONDS = 3;
 
 /**
@@ -66,7 +68,12 @@ bool motorsEnabled = false;
 
 PID pid = PID(PID_P, PID_I, PID_D);
 
+PID rotationPid = PID(ROTATION_PID_P, 0, 0);
+
 double setPoint = 0;
+
+int8_t joystickForward = 0;
+int8_t joystickRotate = 0;
 
 void setupSensors() {
   while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G))
@@ -146,8 +153,11 @@ void control() {
 
   double error = setPoint - complementaryFilter.getAngle();
   double u = pid.perform(error, complementaryFilter.getDt());
-  leftMotor.setDirection(u);
-  rightMotor.setDirection(u);
+
+  double rotationU = rotationPid.perform(joystickRotate, complementaryFilter.getDt());
+
+  leftMotor.setDirection(u + rotationU);
+  rightMotor.setDirection(u - rotationU);
 }
 
 void toggleMotors() {
@@ -205,9 +215,10 @@ void processRadio() {
 					pid.setCoefficients(message.pidP, message.pidI, message.pidD);
 					break;
 				case NONE:
+					joystickForward = message.forward;
+					joystickRotate = message.rotate;
 					break;
 			}
-			float direction = message.forward / 100.0;
 		}
 	}
 }

@@ -36,6 +36,7 @@ struct radioMessage {
 	unsigned long timestamp;
 	unsigned long counter;
 	int8_t forward;
+	int8_t rotate;
 	enum commandType command;
 	double pidP;
 	double pidI;

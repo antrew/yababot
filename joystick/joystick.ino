@@ -99,13 +99,14 @@ void loop() {
 
 	//joystickShield.processEvents();
 	joystickShield.processCallbacks();
-	int x = joystickShield.xAmplitude();
+	int joystickX = joystickShield.xAmplitude();
 	int joystickY = joystickShield.yAmplitude();
 
 	struct radioMessage message;
 	message.timestamp = micros();
 	message.counter = counter++;
 	message.forward = joystickY;
+	message.rotate = joystickX;
 	message.command = NONE;
 	if (joystickShield.isEButton()) {
 		Serial.println("E button pressed. Toggling motors. Waiting for the button to be released...");
@@ -131,7 +132,7 @@ void loop() {
 	}
 	Serial.println(F("done"));
 
-	sprintf(line, "x=%4d ; y=%4d", x, joystickY);
+	sprintf(line, "x=%4d ; y=%4d", joystickX, joystickY);
 //	lcd.setCursor(0, 0);
 //	lcd.print(line);
 //
