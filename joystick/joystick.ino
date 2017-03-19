@@ -9,6 +9,10 @@
 #define RADIO_PIN_CE 9
 #define RADIO_PIN_CS 10
 
+const double PID_P = 0.05;
+const double PID_I = 0;
+const double PID_D = 0;
+
 RF24 radio(RADIO_PIN_CE, RADIO_PIN_CS);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 JoystickShield joystickShield;
@@ -16,6 +20,9 @@ JoystickShield joystickShield;
 boolean isInSettingsMode = false;
 
 const char * FW_ID = "joystick";
+
+char line[30];
+unsigned long counter = 0;
 
 void onSettingsButton() {
 	lcd.setCursor(0, 0);
@@ -27,6 +34,23 @@ void onSettingsButton() {
 		lcd.print("operation");
 	}
 	isInSettingsMode = !isInSettingsMode;
+}
+
+void sendInitialMessage() {
+	struct radioMessage message;
+	message.timestamp = micros();
+	message.counter = counter++;
+	message.forward = 0;
+	message.command = SET_PID_COEFFICIENTS;
+	message.pidP = PID_P;
+	message.pidI = PID_I;
+	message.pidD = PID_D;
+
+	Serial.print("Sending initial message... ");
+	if (!radio.write(&message, sizeof(message))) {
+		Serial.println(F("failed"));
+	}
+	Serial.println(F("done"));
 }
 
 void setup() {
@@ -67,10 +91,9 @@ void setup() {
 	joystickShield.onLeftButton(&onSettingsButton);
 	joystickShield.onRightButton(&onSettingsButton);
 
-}
+	sendInitialMessage();
 
-char line[30];
-unsigned long counter = 0;
+}
 
 void loop() {
 
@@ -83,15 +106,14 @@ void loop() {
 	message.timestamp = micros();
 	message.counter = counter++;
 	message.forward = joystickY;
+	message.command = NONE;
 	if (joystickShield.isEButton()) {
 		Serial.println("E button pressed. Toggling motors. Waiting for the button to be released...");
-		message.toggleMotors = true;
+		message.command = TOGGLE_MOTORS;
 		while (joystickShield.isEButton()) {
 			// wait until the user releases the button
 			joystickShield.processEvents();
 		}
-	} else {
-		message.toggleMotors = false;
 	}
 
 	Serial.print("Sending ");

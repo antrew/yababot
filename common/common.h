@@ -25,11 +25,21 @@ uint8_t RADIO_ADDRESS[6] = "YABAB";
 // 108 - 2.508 Ghz - Above most Wifi Channels
 #define RADIO_CHANNEL 108
 
+enum commandType {
+	NONE,
+	TOGGLE_MOTORS,
+	CALIBRATE,
+	SET_PID_COEFFICIENTS,
+};
+
 struct radioMessage {
 	unsigned long timestamp;
 	unsigned long counter;
 	int8_t forward;
-	bool toggleMotors;
+	enum commandType command;
+	double pidP;
+	double pidI;
+	double pidD;
 };
 
 //Do not add code below this line

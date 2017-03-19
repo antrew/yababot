@@ -43,6 +43,10 @@ const uint8_t RADIO_CS_PIN = A1;
 
 const char * FW_ID = "yababot";
 
+const double PID_P = 0;
+const double PID_I = 0;
+const double PID_D = 0;
+
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
 /**********************************************************/
@@ -52,7 +56,7 @@ Motor rightMotor = Motor(MOTOR_RIGHT_ENABLE, MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_F
 
 bool motorsEnabled = false;
 
-PID pid = PID(1, 0, 0);
+PID pid = PID(PID_P, PID_I, PID_D);
 
 double setPoint = 0;
 
@@ -150,8 +154,18 @@ void processRadio() {
 		while (radio.available()) {             // While there is data ready
 			radio.read(&message, sizeof(message)); // Get the payload
 
-			if (message.toggleMotors) {
-				toggleMotors();
+			switch (message.command) {
+				case TOGGLE_MOTORS:
+					toggleMotors();
+					break;
+				case CALIBRATE:
+					// TODO implement calibration
+					break;
+				case SET_PID_COEFFICIENTS:
+					pid.setCoefficients(message.pidP, message.pidI, message.pidD);
+					break;
+				case NONE:
+					break;
 			}
 			float direction = message.forward / 100.0;
 		}
