@@ -27,13 +27,13 @@ const uint8_t RIGHT_ENCODER_SECOND_PIN = 5;
 
 // motor enable pins must be PWM
 const uint8_t MOTOR_LEFT_ENABLE = 9;
-const uint8_t MOTOR_LEFT_FORWARD = 8;
-const uint8_t MOTOR_LEFT_BACKWARD = 7;
+const uint8_t MOTOR_LEFT_FORWARD = 7;
+const uint8_t MOTOR_LEFT_BACKWARD = 8;
 
 // motor enable pins must be PWM
 const uint8_t MOTOR_RIGHT_ENABLE = 10;
-const uint8_t MOTOR_RIGHT_FORWARD = A3;
-const uint8_t MOTOR_RIGHT_BACKWARD = A2;
+const uint8_t MOTOR_RIGHT_FORWARD = A2;
+const uint8_t MOTOR_RIGHT_BACKWARD = A3;
 
 const uint8_t RADIO_CE_PIN = A0;
 const uint8_t RADIO_CS_PIN = A1;
@@ -42,12 +42,6 @@ const uint8_t RADIO_CS_PIN = A1;
 // RADIO SCK  = 13
 
 const char * FW_ID = "yababot";
-
-const double PID_P = 0;
-const double PID_I = 0;
-const double PID_D = 0;
-
-const double ROTATION_PID_P = 0.01;
 
 const uint8_t CALIBRATION_TIME_SECONDS = 3;
 
@@ -66,9 +60,11 @@ Motor rightMotor = Motor(MOTOR_RIGHT_ENABLE, MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_F
 
 bool motorsEnabled = false;
 
-PID pid = PID(PID_P, PID_I, PID_D);
+PID pid = PID(0, 0, 0);
 
-PID rotationPid = PID(ROTATION_PID_P, 0, 0);
+PID rotationPid = PID(0, 0, 0);
+
+PID speedPid = PID(0, 0, 0);
 
 double setPoint = 0;
 
@@ -151,7 +147,11 @@ void control() {
     rightMotor.off();
   }
 
-  double error = setPoint - complementaryFilter.getAngle();
+  double setPointJoystickAdjustment = speedPid.perform(joystickForward, complementaryFilter.getDt());
+
+  double adjustedSetPoint = setPoint + setPointJoystickAdjustment;
+
+  double error = complementaryFilter.getAngle() - adjustedSetPoint;
   double u = pid.perform(error, complementaryFilter.getDt());
 
   double rotationU = rotationPid.perform(joystickRotate, complementaryFilter.getDt());
@@ -212,7 +212,10 @@ void processRadio() {
 					calibrate();
 					break;
 				case SET_PID_COEFFICIENTS:
+					Serial.println("Setting PID coefficients");
 					pid.setCoefficients(message.pidCoefficients.pidP, message.pidCoefficients.pidI, message.pidCoefficients.pidD);
+					rotationPid.setCoefficients(message.pidCoefficients.rotateP, 0, 0);
+					speedPid.setCoefficients(message.pidCoefficients.speedP, 0, 0);
 					break;
 				case CONTROL:
 					joystickForward = message.control.forward;

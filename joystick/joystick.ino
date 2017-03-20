@@ -13,6 +13,9 @@ const double PID_P = 0.15;
 const double PID_I = 0.000001;
 const double PID_D = 0.002;
 
+const double SPEED_PID_P = 0.04;
+const double ROTATION_PID_P = 0.002;
+
 RF24 radio(RADIO_PIN_CE, RADIO_PIN_CS);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 JoystickShield joystickShield;
@@ -42,6 +45,9 @@ void sendInitialMessage() {
 	message.pidCoefficients.pidP = PID_P;
 	message.pidCoefficients.pidI = PID_I;
 	message.pidCoefficients.pidD = PID_D;
+
+	message.pidCoefficients.speedP = SPEED_PID_P;
+	message.pidCoefficients.rotateP = ROTATION_PID_P;
 
 	Serial.print("Sending initial message... ");
 	if (!radio.write(&message, sizeof(message))) {
@@ -95,9 +101,11 @@ void setup() {
 void loop() {
 
 	//joystickShield.processEvents();
+	// right is negative on the joystick
 	joystickShield.processCallbacks();
-	int joystickX = joystickShield.xAmplitude();
-	int joystickY = joystickShield.yAmplitude();
+	int joystickX = - joystickShield.xAmplitude();
+	// forward is negative on the joystick
+	int joystickY = - joystickShield.yAmplitude();
 
 	struct radioMessage message;
 	if (joystickShield.isEButton()) {
