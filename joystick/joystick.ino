@@ -9,9 +9,9 @@
 #define RADIO_PIN_CE 9
 #define RADIO_PIN_CS 10
 
-const double PID_P = 0.05;
-const double PID_I = 0;
-const double PID_D = 0;
+const double PID_P = 0.15;
+const double PID_I = 0.000001;
+const double PID_D = 0.002;
 
 RF24 radio(RADIO_PIN_CE, RADIO_PIN_CS);
 LiquidCrystal_I2C lcd(0x27, 16, 2);

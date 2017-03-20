@@ -42,8 +42,8 @@ void ComplementaryFilter::updateValue(
 	Serial.print(" accelerometerAngle ");
 	Serial.print(accelerometerAngle);
 
-//	Serial.print(" dt = ");
-//	Serial.print(dt);
+	Serial.print(" dt ");
+	Serial.print(dt);
 //	Serial.print(" K = ");
 //	Serial.print(K);
 
