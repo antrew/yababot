@@ -38,13 +38,10 @@ void onSettingsButton() {
 
 void sendInitialMessage() {
 	struct radioMessage message;
-	message.timestamp = micros();
-	message.counter = counter++;
-	message.forward = 0;
 	message.command = SET_PID_COEFFICIENTS;
-	message.pidP = PID_P;
-	message.pidI = PID_I;
-	message.pidD = PID_D;
+	message.pidCoefficients.pidP = PID_P;
+	message.pidCoefficients.pidI = PID_I;
+	message.pidCoefficients.pidD = PID_D;
 
 	Serial.print("Sending initial message... ");
 	if (!radio.write(&message, sizeof(message))) {
@@ -103,11 +100,6 @@ void loop() {
 	int joystickY = joystickShield.yAmplitude();
 
 	struct radioMessage message;
-	message.timestamp = micros();
-	message.counter = counter++;
-	message.forward = joystickY;
-	message.rotate = joystickX;
-	message.command = NONE;
 	if (joystickShield.isEButton()) {
 		Serial.println("E button pressed. Toggling motors. Waiting for the button to be released...");
 		message.command = TOGGLE_MOTORS;
@@ -122,10 +114,14 @@ void loop() {
 			// wait until the user releases the button
 			joystickShield.processEvents();
 		}
+	} else {
+		message.command = CONTROL;
+		message.control.forward = joystickY;
+		message.control.rotate = joystickX;
 	}
 
 	Serial.print("Sending ");
-	Serial.print(message.timestamp);
+	Serial.print(message.command);
 	Serial.print("... ");
 	if (!radio.write(&message, sizeof(message))) {
 		Serial.println(F("failed"));

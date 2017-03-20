@@ -26,21 +26,25 @@ uint8_t RADIO_ADDRESS[6] = "YABAB";
 #define RADIO_CHANNEL 108
 
 enum commandType {
-	NONE,
+	CONTROL,
 	TOGGLE_MOTORS,
 	CALIBRATE,
 	SET_PID_COEFFICIENTS,
 };
 
 struct radioMessage {
-	unsigned long timestamp;
-	unsigned long counter;
-	int8_t forward;
-	int8_t rotate;
 	enum commandType command;
-	double pidP;
-	double pidI;
-	double pidD;
+	union {
+		struct {
+			int8_t forward;
+			int8_t rotate;
+		} control;
+		struct {
+			double pidP;
+			double pidI;
+			double pidD;
+		} pidCoefficients;
+	};
 };
 
 //Do not add code below this line

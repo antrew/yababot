@@ -212,11 +212,11 @@ void processRadio() {
 					calibrate();
 					break;
 				case SET_PID_COEFFICIENTS:
-					pid.setCoefficients(message.pidP, message.pidI, message.pidD);
+					pid.setCoefficients(message.pidCoefficients.pidP, message.pidCoefficients.pidI, message.pidCoefficients.pidD);
 					break;
-				case NONE:
-					joystickForward = message.forward;
-					joystickRotate = message.rotate;
+				case CONTROL:
+					joystickForward = message.control.forward;
+					joystickRotate = message.control.rotate;
 					break;
 			}
 		}
