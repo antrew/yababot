@@ -17,7 +17,10 @@ uint8_t RADIO_ADDRESS[6] = "YABAB";
 
 // Set the PA Level low to prevent power supply related issues since this is a
 // getting_started sketch, and the likelihood of close proximity of the devices. RF24_PA_MAX is default.
-#define RADIO_POWER_LEVEL RF24_PA_MIN
+#define RADIO_POWER_LEVEL_ROBOT RF24_PA_MIN
+
+// use more power on the joystick
+#define RADIO_POWER_LEVEL_JOYSTICK RF24_PA_LOW
 
 // increase range by reducing the speed
 #define RADIO_DATA_RATE RF24_250KBPS

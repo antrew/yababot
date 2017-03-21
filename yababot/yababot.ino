@@ -89,7 +89,7 @@ void setup() {
 
 	// Set the PA Level low to prevent power supply related issues since this is a
 	// getting_started sketch, and the likelihood of close proximity of the devices. RF24_PA_MAX is default.
-	radio.setPALevel(RADIO_POWER_LEVEL);
+	radio.setPALevel(RADIO_POWER_LEVEL_ROBOT);
 
 	// increase range by reducing the speed
 	radio.setDataRate(RADIO_DATA_RATE);
