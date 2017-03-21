@@ -46,6 +46,7 @@ struct radioMessage {
 			double pidP;
 			double pidI;
 			double pidD;
+			double positionP;
 			double speedP;
 			double rotateP;
 			double complementaryFilterT;

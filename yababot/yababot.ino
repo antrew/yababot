@@ -76,6 +76,8 @@ PID pid = PID(0, 0, 0);
 
 PID rotationPid = PID(0, 0, 0);
 
+PID positionPid = PID(0, 0, 0);
+
 PID speedPid = PID(0, 0, 0);
 
 double setPoint = 0;
@@ -151,22 +153,9 @@ void processSensors() {
   complementaryFilter.updateValue(accelAngle, gyroRate);
 }
 
-int32_t leftEncoderLast = 0;
-void processEncoders() {
-  int32_t l = - leftEncoder.read();
-  int32_t delta = l - leftEncoderLast;
-  double distance = wheelEncoder.getDistance(l);
-  double speed = wheelEncoder.getSpeed(delta, complementaryFilter.getDt());
-  leftEncoderLast = l;
-  Serial.print("Encoder ticks ");
-  Serial.print(l);
-  Serial.print(" delta ");
-  Serial.print(delta);
-  Serial.print(" distance ");
-  Serial.print(distance);
-  Serial.print(" speed ");
-  Serial.print(speed);
-  Serial.println();
+void resetPosition() {
+  leftEncoder.write(0);
+  rightEncoder.write(0);
 }
 
 void control() {
@@ -177,9 +166,23 @@ void control() {
     rightMotor.off();
   }
 
-  double setPointJoystickAdjustment = speedPid.perform(joystickForward, complementaryFilter.getDt());
+  double adjustedSetPoint;
+  if (abs(joystickForward) > 1) {
+    // consider only joystick
+    resetPosition();
+    double setPointJoystickAdjustment = speedPid.perform(joystickForward, complementaryFilter.getDt());
 
-  double adjustedSetPoint = setPoint + setPointJoystickAdjustment;
+    adjustedSetPoint = setPoint + setPointJoystickAdjustment;
+  } else {
+    // consider only position
+    // encoders position adjustment
+    int32_t leftTicks = - leftEncoder.read();
+    int32_t rightTicks = - rightEncoder.read();
+    double position = wheelEncoder.getDistance((leftTicks + rightTicks) / 2);
+    double setPointPositionAdjustment = positionPid.perform(-position, complementaryFilter.getDt());
+
+    adjustedSetPoint = setPoint + setPointPositionAdjustment;
+  }
 
   double error = complementaryFilter.getAngle() - adjustedSetPoint;
   double u = pid.perform(error, complementaryFilter.getDt());
@@ -228,6 +231,15 @@ void calibrate() {
 	Serial.println();
 }
 
+void setPidCoefficients(struct radioMessage message) {
+	Serial.println("Setting PID coefficients");
+	pid.setCoefficients(message.pidCoefficients.pidP, message.pidCoefficients.pidI, message.pidCoefficients.pidD);
+	rotationPid.setCoefficients(message.pidCoefficients.rotateP, 0, 0);
+	positionPid.setCoefficients(message.pidCoefficients.positionP, 0, 0);
+	speedPid.setCoefficients(message.pidCoefficients.speedP, 0, 0);
+	complementaryFilter.setT(message.pidCoefficients.complementaryFilterT);
+}
+
 void processRadio() {
 	if (radio.available()) {
 		struct radioMessage message;
@@ -242,11 +254,7 @@ void processRadio() {
 					calibrate();
 					break;
 				case SET_PID_COEFFICIENTS:
-					Serial.println("Setting PID coefficients");
-					pid.setCoefficients(message.pidCoefficients.pidP, message.pidCoefficients.pidI, message.pidCoefficients.pidD);
-					rotationPid.setCoefficients(message.pidCoefficients.rotateP, 0, 0);
-					speedPid.setCoefficients(message.pidCoefficients.speedP, 0, 0);
-					complementaryFilter.setT(message.pidCoefficients.complementaryFilterT);
+					setPidCoefficients(message);
 					break;
 				case CONTROL:
 					joystickForward = message.control.forward;
@@ -260,7 +268,6 @@ void processRadio() {
 void loop() {
 	// read MPU6050 here
 	processSensors();
-	processEncoders();
 	// balance
 	control();
 	// process radio commands
