@@ -16,6 +16,8 @@ const double PID_D = 0.002;
 const double SPEED_PID_P = 0.04;
 const double ROTATION_PID_P = 0.002;
 
+const double COMPLEMENTARY_FILTER_T = 1;
+
 RF24 radio(RADIO_PIN_CE, RADIO_PIN_CS);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 JoystickShield joystickShield;
@@ -48,6 +50,8 @@ void sendInitialMessage() {
 
 	message.pidCoefficients.speedP = SPEED_PID_P;
 	message.pidCoefficients.rotateP = ROTATION_PID_P;
+
+	message.pidCoefficients.complementaryFilterT = COMPLEMENTARY_FILTER_T;
 
 	Serial.print("Sending initial message... ");
 	if (!radio.write(&message, sizeof(message))) {

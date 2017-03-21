@@ -216,6 +216,7 @@ void processRadio() {
 					pid.setCoefficients(message.pidCoefficients.pidP, message.pidCoefficients.pidI, message.pidCoefficients.pidD);
 					rotationPid.setCoefficients(message.pidCoefficients.rotateP, 0, 0);
 					speedPid.setCoefficients(message.pidCoefficients.speedP, 0, 0);
+					complementaryFilter.setT(message.pidCoefficients.complementaryFilterT);
 					break;
 				case CONTROL:
 					joystickForward = message.control.forward;
