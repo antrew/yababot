@@ -22,24 +22,34 @@ ComplementaryFilter complementaryFilter;
 // 2 and 3 are the only two pins supporting hardware interrupts
 const uint8_t LEFT_ENCODER_INTERRUPT_PIN = 2;
 const uint8_t RIGHT_ENCODER_INTERRUPT_PIN = 3;
-const uint8_t LEFT_ENCODER_SECOND_PIN = A3;
-const uint8_t RIGHT_ENCODER_SECOND_PIN = A2;
+const uint8_t LEFT_ENCODER_SECOND_PIN = 4;
+const uint8_t RIGHT_ENCODER_SECOND_PIN = 5;
 
-const uint8_t MOTOR_LEFT_ENABLE = 6;
-const uint8_t MOTOR_LEFT_FORWARD = 9;
-const uint8_t MOTOR_LEFT_BACKWARD = 10;
+// motor enable pins must be PWM
+const uint8_t MOTOR_LEFT_ENABLE = 9;
+const uint8_t MOTOR_LEFT_FORWARD = 7;
+const uint8_t MOTOR_LEFT_BACKWARD = 8;
 
-const uint8_t MOTOR_RIGHT_ENABLE = 5;
-const uint8_t MOTOR_RIGHT_FORWARD = 4;
-const uint8_t MOTOR_RIGHT_BACKWARD = A0;
+// motor enable pins must be PWM
+const uint8_t MOTOR_RIGHT_ENABLE = 10;
+const uint8_t MOTOR_RIGHT_FORWARD = A2;
+const uint8_t MOTOR_RIGHT_BACKWARD = A3;
 
-const uint8_t RADIO_CE_PIN = 7;
-const uint8_t RADIO_CS_PIN = 8;
+const uint8_t RADIO_CE_PIN = A0;
+const uint8_t RADIO_CS_PIN = A1;
 // RADIO MOSI = 11
 // RADIO MISO = 12
 // RADIO SCK  = 13
 
 const char * FW_ID = "yababot";
+
+const uint8_t CALIBRATION_TIME_SECONDS = 3;
+
+/**
+ * Critical angle that cannot be normally recovered.
+ * Motors will be switched off when this angle is reached.
+ */
+const double FAILSAFE_CRITICAL_ANGLE = 70;
 
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(RADIO_CE_PIN, RADIO_CS_PIN);
@@ -50,9 +60,16 @@ Motor rightMotor = Motor(MOTOR_RIGHT_ENABLE, MOTOR_RIGHT_BACKWARD, MOTOR_RIGHT_F
 
 bool motorsEnabled = false;
 
-PID pid = PID(1, 0, 0);
+PID pid = PID(0, 0, 0);
+
+PID rotationPid = PID(0, 0, 0);
+
+PID speedPid = PID(0, 0, 0);
 
 double setPoint = 0;
+
+int8_t joystickForward = 0;
+int8_t joystickRotate = 0;
 
 void setupSensors() {
   while(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G))
@@ -72,7 +89,7 @@ void setup() {
 
 	// Set the PA Level low to prevent power supply related issues since this is a
 	// getting_started sketch, and the likelihood of close proximity of the devices. RF24_PA_MAX is default.
-	radio.setPALevel(RADIO_POWER_LEVEL);
+	radio.setPALevel(RADIO_POWER_LEVEL_ROBOT);
 
 	// increase range by reducing the speed
 	radio.setDataRate(RADIO_DATA_RATE);
@@ -123,22 +140,62 @@ void processSensors() {
 }
 
 void control() {
-  double error = setPoint - complementaryFilter.getAngle();
+  // turn off motors if the angle is more than critical
+  if (abs(complementaryFilter.getAngle()) > FAILSAFE_CRITICAL_ANGLE) {
+    Serial.println("Critical angle detected. Switching motors off.");
+    leftMotor.off();
+    rightMotor.off();
+  }
+
+  double setPointJoystickAdjustment = speedPid.perform(joystickForward, complementaryFilter.getDt());
+
+  double adjustedSetPoint = setPoint + setPointJoystickAdjustment;
+
+  double error = complementaryFilter.getAngle() - adjustedSetPoint;
   double u = pid.perform(error, complementaryFilter.getDt());
-  leftMotor.setDirection(u);
-  rightMotor.setDirection(u);
+
+  double rotationU = rotationPid.perform(joystickRotate, complementaryFilter.getDt());
+
+  leftMotor.setDirection(u + rotationU);
+  rightMotor.setDirection(u - rotationU);
 }
 
 void toggleMotors() {
+	Serial.print("Toggling motors ");
 	if (motorsEnabled) {
+		Serial.println("off");
 		motorsEnabled = false;
 		leftMotor.off();
 		rightMotor.off();
 	} else {
+		Serial.println("on");
 		motorsEnabled = true;
 		leftMotor.on();
 		rightMotor.on();
 	}
+}
+
+void calibrate() {
+	Serial.println("Begin calibration");
+
+	// calibrate gyro
+	mpu.calibrateGyro();
+
+	// calibrate setPoint
+	unsigned long endCalibrationMillis = millis() + CALIBRATION_TIME_SECONDS * 1000;
+	unsigned long iterations = 0;
+	double sumAngle = 0;
+	while (millis() < endCalibrationMillis) {
+		processSensors();
+		sumAngle += complementaryFilter.getAngle();
+		iterations++;
+	}
+	setPoint = sumAngle / iterations;
+	Serial.print("End calibration. setPoint = ");
+	Serial.print(setPoint);
+	Serial.print(" iterations = ");
+	Serial.print(iterations);
+	Serial.println();
 }
 
 void processRadio() {
@@ -147,10 +204,25 @@ void processRadio() {
 		while (radio.available()) {             // While there is data ready
 			radio.read(&message, sizeof(message)); // Get the payload
 
-			if (message.toggleMotors) {
-				toggleMotors();
+			switch (message.command) {
+				case TOGGLE_MOTORS:
+					toggleMotors();
+					break;
+				case CALIBRATE:
+					calibrate();
+					break;
+				case SET_PID_COEFFICIENTS:
+					Serial.println("Setting PID coefficients");
+					pid.setCoefficients(message.pidCoefficients.pidP, message.pidCoefficients.pidI, message.pidCoefficients.pidD);
+					rotationPid.setCoefficients(message.pidCoefficients.rotateP, 0, 0);
+					speedPid.setCoefficients(message.pidCoefficients.speedP, 0, 0);
+					complementaryFilter.setT(message.pidCoefficients.complementaryFilterT);
+					break;
+				case CONTROL:
+					joystickForward = message.control.forward;
+					joystickRotate = message.control.rotate;
+					break;
 			}
-			float direction = message.forward / 100.0;
 		}
 	}
 }

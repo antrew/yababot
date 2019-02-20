@@ -9,6 +9,15 @@
 #define RADIO_PIN_CE 9
 #define RADIO_PIN_CS 10
 
+const double PID_P = 0.15;
+const double PID_I = 0.000001;
+const double PID_D = 0.002;
+
+const double SPEED_PID_P = 0.04;
+const double ROTATION_PID_P = 0.002;
+
+const double COMPLEMENTARY_FILTER_T = 1;
+
 RF24 radio(RADIO_PIN_CE, RADIO_PIN_CS);
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 JoystickShield joystickShield;
@@ -16,6 +25,9 @@ JoystickShield joystickShield;
 boolean isInSettingsMode = false;
 
 const char * FW_ID = "joystick";
+
+char line[30];
+unsigned long counter = 0;
 
 void onSettingsButton() {
 	lcd.setCursor(0, 0);
@@ -29,6 +41,25 @@ void onSettingsButton() {
 	isInSettingsMode = !isInSettingsMode;
 }
 
+void sendInitialMessage() {
+	struct radioMessage message;
+	message.command = SET_PID_COEFFICIENTS;
+	message.pidCoefficients.pidP = PID_P;
+	message.pidCoefficients.pidI = PID_I;
+	message.pidCoefficients.pidD = PID_D;
+
+	message.pidCoefficients.speedP = SPEED_PID_P;
+	message.pidCoefficients.rotateP = ROTATION_PID_P;
+
+	message.pidCoefficients.complementaryFilterT = COMPLEMENTARY_FILTER_T;
+
+	Serial.print("Sending initial message... ");
+	if (!radio.write(&message, sizeof(message))) {
+		Serial.println(F("failed"));
+	}
+	Serial.println(F("done"));
+}
+
 void setup() {
 	Serial.begin(115200);
 	printf_begin();
@@ -38,7 +69,7 @@ void setup() {
 
 	// Set the PA Level low to prevent power supply related issues since this is a
 	// getting_started sketch, and the likelihood of close proximity of the devices. RF24_PA_MAX is default.
-	radio.setPALevel(RADIO_POWER_LEVEL);
+	radio.setPALevel(RADIO_POWER_LEVEL_JOYSTICK);
 
 	// increase range by reducing the speed
 	radio.setDataRate(RADIO_DATA_RATE);
@@ -67,42 +98,49 @@ void setup() {
 	joystickShield.onLeftButton(&onSettingsButton);
 	joystickShield.onRightButton(&onSettingsButton);
 
-}
+	sendInitialMessage();
 
-char line[30];
-unsigned long counter = 0;
+}
 
 void loop() {
 
 	//joystickShield.processEvents();
+	// right is negative on the joystick
 	joystickShield.processCallbacks();
-	int x = joystickShield.xAmplitude();
-	int joystickY = joystickShield.yAmplitude();
+	int joystickX = - joystickShield.xAmplitude();
+	// forward is negative on the joystick
+	int joystickY = - joystickShield.yAmplitude();
 
 	struct radioMessage message;
-	message.timestamp = micros();
-	message.counter = counter++;
-	message.forward = joystickY;
 	if (joystickShield.isEButton()) {
 		Serial.println("E button pressed. Toggling motors. Waiting for the button to be released...");
-		message.toggleMotors = true;
+		message.command = TOGGLE_MOTORS;
 		while (joystickShield.isEButton()) {
 			// wait until the user releases the button
 			joystickShield.processEvents();
 		}
+	} else if (joystickShield.isFButton()) {
+		Serial.println("F button pressed. Calibrating. Waiting for the button to be released...");
+		message.command = CALIBRATE;
+		while (joystickShield.isFButton()) {
+			// wait until the user releases the button
+			joystickShield.processEvents();
+		}
 	} else {
-		message.toggleMotors = false;
+		message.command = CONTROL;
+		message.control.forward = joystickY;
+		message.control.rotate = joystickX;
 	}
 
 	Serial.print("Sending ");
-	Serial.print(message.timestamp);
+	Serial.print(message.command);
 	Serial.print("... ");
 	if (!radio.write(&message, sizeof(message))) {
 		Serial.println(F("failed"));
 	}
 	Serial.println(F("done"));
 
-	sprintf(line, "x=%4d ; y=%4d", x, joystickY);
+	sprintf(line, "x=%4d ; y=%4d", joystickX, joystickY);
 //	lcd.setCursor(0, 0);
 //	lcd.print(line);
 //

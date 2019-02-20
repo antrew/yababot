@@ -10,6 +10,7 @@
 #include <math.h>
 
 ComplementaryFilter::ComplementaryFilter() {
+	this->T = 1;
 }
 
 ComplementaryFilter::~ComplementaryFilter() {
@@ -30,11 +31,6 @@ void ComplementaryFilter::updateValue(
 
 	//complementary filter
 
-	// T defines the averaging period for accelerometerAngle
-	// bigger T increases the use of the gyroscope over the accelerometer
-	// smaller T increases the use of the accelerometer over the gyroscope
-	// use Arduino Serial Plotter over accelerometerAngle and angle to tune T
-	double T = 1; // in seconds
 	double K = T / (T + dt);
 	double gyroscopeAngle = gyroRate * dt;
 	angle = K * (angle + gyroscopeAngle) + (1 - K) * accelerometerAngle;
@@ -42,8 +38,8 @@ void ComplementaryFilter::updateValue(
 	Serial.print(" accelerometerAngle ");
 	Serial.print(accelerometerAngle);
 
-//	Serial.print(" dt = ");
-//	Serial.print(dt);
+	Serial.print(" dt ");
+	Serial.print(dt);
 //	Serial.print(" K = ");
 //	Serial.print(K);
 
@@ -59,4 +55,8 @@ double ComplementaryFilter::getAngle() {
 
 double ComplementaryFilter::getDt() {
 	return this->dt;
+}
+
+void ComplementaryFilter::setT(double t) {
+	this->T = t;
 }

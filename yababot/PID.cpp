@@ -39,3 +39,9 @@ double PID::perform(double error, double dt) {
 
 	return u;
 }
+
+void PID::setCoefficients(double P, double I, double D) {
+	this->P = P;
+	this->I = I;
+	this->D = D;
+}
