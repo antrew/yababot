@@ -1,0 +1,15 @@
+[submodule "lib/Arduino-MPU6050"]
+	path = lib/Arduino-MPU6050
+	url = https://github.com/jarzebski/Arduino-MPU6050
+[submodule "lib/RF24"]
+	path = lib/RF24
+	url = https://github.com/nRF24/RF24.git
+[submodule "lib/JoystickShield"]
+	path = lib/JoystickShield
+	url = https://github.com/sudar/JoystickShield.git
+[submodule "lib/LiquidCrystal_I2C"]
+	path = lib/LiquidCrystal_I2C
+	url = https://github.com/fdebrabander/Arduino-LiquidCrystal-I2C-library.git
+[submodule "lib/Encoder"]
+	path = lib/Encoder
+	url = https://github.com/PaulStoffregen/Encoder.git
