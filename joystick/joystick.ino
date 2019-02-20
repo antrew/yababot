@@ -13,7 +13,11 @@ const double PID_P = 0.15;
 const double PID_I = 0.000001;
 const double PID_D = 0.002;
 
+// 0.001 - no effect
+// 0.01 - slowly scillates
+// 0.1 - oscillates
 const double POSITION_PID_P = 0.05;
+// FIXME add small position I
 
 const double SPEED_PID_P = 0.04;
 const double ROTATION_PID_P = 0.002;
