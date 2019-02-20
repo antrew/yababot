@@ -13,7 +13,7 @@ const double PID_P = 0.15;
 const double PID_I = 0.000001;
 const double PID_D = 0.002;
 
-const double POSITION_PID_P = 0.001;
+const double POSITION_PID_P = 0.05;
 
 const double SPEED_PID_P = 0.04;
 const double ROTATION_PID_P = 0.002;
