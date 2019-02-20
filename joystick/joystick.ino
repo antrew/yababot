@@ -46,9 +46,9 @@ void onSettingsButton() {
 void sendInitialMessage() {
 	struct radioMessage message;
 	message.command = SET_PID_COEFFICIENTS;
-	message.pidCoefficients.pidP = PID_P;
-	message.pidCoefficients.pidI = PID_I;
-	message.pidCoefficients.pidD = PID_D;
+	message.pidCoefficients.pid.p = PID_P;
+	message.pidCoefficients.pid.i = PID_I;
+	message.pidCoefficients.pid.d = PID_D;
 
 	message.pidCoefficients.positionP = POSITION_PID_P;
 	message.pidCoefficients.speedP = SPEED_PID_P;

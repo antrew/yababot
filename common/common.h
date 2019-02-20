@@ -35,6 +35,12 @@ enum commandType {
 	SET_PID_COEFFICIENTS,
 };
 
+struct pid {
+	double p;
+	double i;
+	double d;
+};
+
 struct radioMessage {
 	enum commandType command;
 	union {
@@ -43,9 +49,7 @@ struct radioMessage {
 			int8_t rotate;
 		} control;
 		struct {
-			double pidP;
-			double pidI;
-			double pidD;
+			struct pid pid;
 			double positionP;
 			double speedP;
 			double rotateP;

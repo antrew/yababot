@@ -233,7 +233,7 @@ void calibrate() {
 
 void setPidCoefficients(struct radioMessage message) {
 	Serial.println("Setting PID coefficients");
-	pid.setCoefficients(message.pidCoefficients.pidP, message.pidCoefficients.pidI, message.pidCoefficients.pidD);
+	pid.setCoefficients(message.pidCoefficients.pid.p, message.pidCoefficients.pid.i, message.pidCoefficients.pid.d);
 	rotationPid.setCoefficients(message.pidCoefficients.rotateP, 0, 0);
 	positionPid.setCoefficients(message.pidCoefficients.positionP, 0, 0);
 	speedPid.setCoefficients(message.pidCoefficients.speedP, 0, 0);
